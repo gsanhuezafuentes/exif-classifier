@@ -14,6 +14,19 @@ const (
 	ERROR
 )
 
+type Logger interface {
+	SetLogLevel(level LogLevel)
+	SetOutput(w io.Writer)
+	Debug(message ...any)
+	Info(message ...any)
+	Warning(message ...any)
+	Error(message ...any)
+	Debugf(format string, args ...any)
+	Infof(format string, args ...any)
+	Warningf(format string, args ...any)
+	Errorf(format string, args ...any)
+}
+
 type CustomLogger struct {
 	*log.Logger
 	logLevel LogLevel
