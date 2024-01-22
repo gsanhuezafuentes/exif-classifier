@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/alecthomas/kong"
+	exif_reader "github.com/gsanhuezafuentes/exif-classifier/exif-reader"
 	"github.com/gsanhuezafuentes/exif-classifier/logger"
 	"io"
 	"os"
@@ -30,8 +31,10 @@ func setLoggerLevel(cli *CLI) error {
 }
 
 type Context struct {
-	logger logger.Logger
-	output io.Writer
+	Logger        logger.Logger
+	ProgramOutput io.Writer
+	ExifReader    exif_reader.ExifReader
+	ExifPrinter   exif_reader.ExifPrinter
 }
 
 type CLI struct {
@@ -42,7 +45,7 @@ type CLI struct {
 }
 
 func main() {
-	//
+	exifReader := exif_reader.New()
 
 	cli := CLI{}
 	ctx := kong.Parse(&cli,
@@ -57,8 +60,10 @@ func main() {
 		},
 		kong.Bind(
 			Context{
-				logger.GetLogger(),
-				os.Stdout,
+				Logger:        logger.GetLogger(),
+				ProgramOutput: os.Stdout,
+				ExifReader:    exifReader,
+				ExifPrinter:   exifReader,
 			},
 		),
 	)
