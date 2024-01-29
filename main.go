@@ -2,8 +2,9 @@ package main
 
 import (
 	"github.com/alecthomas/kong"
-	exif_reader "github.com/gsanhuezafuentes/exif-classifier/exif-reader"
+	"github.com/gsanhuezafuentes/exif-classifier/exif_reader"
 	"github.com/gsanhuezafuentes/exif-classifier/logger"
+	"github.com/gsanhuezafuentes/exif-classifier/organize"
 	"io"
 	"os"
 )
@@ -33,7 +34,7 @@ func setLoggerLevel(cli *CLI) error {
 type Context struct {
 	Logger        logger.Logger
 	ProgramOutput io.Writer
-	ExifReader    exif_reader.ExifReader
+	Organizer     organize.Organizer
 	ExifPrinter   exif_reader.ExifPrinter
 }
 
@@ -62,7 +63,7 @@ func main() {
 			Context{
 				Logger:        logger.GetLogger(),
 				ProgramOutput: os.Stdout,
-				ExifReader:    exifReader,
+				Organizer:     organize.NewDefaultOrganizer(exif_reader.New(), os.Rename),
 				ExifPrinter:   exifReader,
 			},
 		),

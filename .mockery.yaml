@@ -1,0 +1,12 @@
+with-expecter: true
+packages:
+  github.com/gsanhuezafuentes/exif-classifier/exif_reader:
+    interfaces:
+      ExifReader:
+      ExifPrinter:
+  github.com/gsanhuezafuentes/exif-classifier/organize:
+    interfaces:
+      Organizer:
+  io:
+    interfaces:
+      Writer:
