@@ -2,7 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/gsanhuezafuentes/exif-classifier/exif_reader"
 	"github.com/gsanhuezafuentes/exif-classifier/fileutils"
+	"github.com/gsanhuezafuentes/exif-classifier/logger"
+	"github.com/gsanhuezafuentes/exif-classifier/organize"
+	"io"
 )
 
 type GroupCmd struct {
@@ -12,9 +16,25 @@ type GroupCmd struct {
 	Path        string `arg:"" help:"Location folder of images. by default use the date option" optional:"" type:"existingdir"`
 }
 
-func (r *GroupCmd) Run(ctx Context) error {
+type CmdContext struct {
+	Logger        logger.Logger
+	ProgramOutput io.Writer
+}
+
+type GroupCmdContext struct {
+	CmdContext
+	Organizer     organize.Organizer
+	FileOperation GroupCmdFileOperation
+}
+
+type GroupCmdFileOperation interface {
+	GetCurrentDirectory() (string, error)
+	GetImageFilesPathFromDirectory(string) ([]string, error)
+}
+
+func (r *GroupCmd) Run(ctx *GroupCmdContext) error {
 	if r.Path == "" {
-		directory, err := fileutils.GetCurrentDirectory()
+		directory, err := ctx.FileOperation.GetCurrentDirectory()
 		ctx.Logger.Debugf("Using Getwd() %s", directory)
 		if err != nil {
 			return err
@@ -23,7 +43,7 @@ func (r *GroupCmd) Run(ctx Context) error {
 	}
 	fmt.Fprintf(ctx.ProgramOutput, "%+v\n", r)
 
-	files, err := fileutils.GetImageFilesPathFromDirectory(r.Path)
+	files, err := ctx.FileOperation.GetImageFilesPathFromDirectory(r.Path)
 	fmt.Fprintf(ctx.ProgramOutput, "%s\n", files)
 
 	ctx.Organizer.SetImagesPath(files)
@@ -55,11 +75,26 @@ func (r *GroupCmd) Run(ctx Context) error {
 	return err
 }
 
+type DefaultCmdOperation struct{}
+
+func (r DefaultCmdOperation) GetCurrentDirectory() (string, error) {
+	return fileutils.GetCurrentDirectory()
+}
+
+func (r DefaultCmdOperation) GetImageFilesPathFromDirectory(s string) ([]string, error) {
+	return fileutils.GetImageFilesPathFromDirectory(s)
+}
+
 type PrintExifCmd struct {
 	Path string `arg:"" help:"File path of the image" type:"existingfile"`
 }
 
-func (r *PrintExifCmd) Run(ctx Context) error {
+type PrintExifCmdContext struct {
+	CmdContext
+	ExifPrinter exif_reader.ExifPrinter
+}
+
+func (r *PrintExifCmd) Run(ctx *PrintExifCmdContext) error {
 	fmt.Fprintf(ctx.ProgramOutput, "%+v\n", r)
 
 	ctx.ExifPrinter.PrintExif(r.Path, ctx.ProgramOutput)

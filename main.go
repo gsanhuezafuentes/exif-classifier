@@ -5,7 +5,6 @@ import (
 	"github.com/gsanhuezafuentes/exif-classifier/exif_reader"
 	"github.com/gsanhuezafuentes/exif-classifier/logger"
 	"github.com/gsanhuezafuentes/exif-classifier/organize"
-	"io"
 	"os"
 )
 
@@ -31,13 +30,6 @@ func setLoggerLevel(cli *CLI) error {
 
 }
 
-type Context struct {
-	Logger        logger.Logger
-	ProgramOutput io.Writer
-	Organizer     organize.Organizer
-	ExifPrinter   exif_reader.ExifPrinter
-}
-
 type CLI struct {
 	Debug     bool         `short:"D" help:"Enable debug mode"`
 	LogLevel  string       `short:"l" default:"info" help:"Set the logging level (debug|info|warning|error)" enum:"debug,info,warning,error"`
@@ -60,11 +52,17 @@ func main() {
 			"version": "0.0.1",
 		},
 		kong.Bind(
-			Context{
-				Logger:        logger.GetLogger(),
-				ProgramOutput: os.Stdout,
+			&GroupCmdContext{
+				CmdContext:    CmdContext{Logger: logger.GetLogger(), ProgramOutput: os.Stdout},
 				Organizer:     organize.NewDefaultOrganizer(exif_reader.New(), os.Rename),
-				ExifPrinter:   exifReader,
+				FileOperation: DefaultCmdOperation{},
+			},
+			&PrintExifCmdContext{
+				CmdContext: CmdContext{
+					Logger:        logger.GetLogger(),
+					ProgramOutput: os.Stdout,
+				},
+				ExifPrinter: exifReader,
 			},
 		),
 	)
