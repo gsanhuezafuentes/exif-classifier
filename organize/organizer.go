@@ -44,6 +44,9 @@ func (r *DefaultOrganizer) SetImagesPath(files []string) {
 func (r *DefaultOrganizer) OrganizeImgsByDate() error {
 	return r.organizeFiles(func(exif *exifDataWithPath) string {
 		creationTime := exif.CreatedTime
+		if creationTime.IsZero() {
+			return ""
+		}
 		date := creationTime.Format(DATE_FORMAT)
 		return date
 	})

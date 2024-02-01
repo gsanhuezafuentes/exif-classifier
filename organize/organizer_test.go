@@ -67,6 +67,35 @@ func TestDefaultOrganizer_OrganizeImgsByDate(t *testing.T) {
 	}
 }
 
+func TestDefaultOrganizer_OrganizeImgsByDate_EmptyDate(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "test_organizer")
+	defer os.RemoveAll(tempDir)
+	assert.NoError(t, err)
+
+	files := createTestFiles(t, tempDir, testFileNames)
+
+	var mockValues = make(map[string]*er.ExifData)
+	for _, file := range files {
+		mockValues[file] = &er.ExifData{}
+	}
+
+	exifReader := &mockExifReader{
+		MockResult: mockValues,
+	}
+	organizer := NewDefaultOrganizer(exifReader, os.Rename)
+
+	organizer.SetImagesPath(files)
+
+	assert.NoError(t, organizer.OrganizeImgsByDate())
+
+	for key, _ := range mockValues {
+		_, err := os.Stat(filepath.Join(filepath.Dir(key), filepath.Base(key)))
+		if os.IsNotExist(err) {
+			t.Fatal("File was not classified.")
+		}
+	}
+}
+
 func TestDefaultOrganizer_OrganizeImgsByOrientation(t *testing.T) {
 	tempDir, err := os.MkdirTemp("", "test_organizer")
 	defer os.RemoveAll(tempDir)
