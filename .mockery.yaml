@@ -1,5 +1,8 @@
 with-expecter: true
 packages:
+  github.com/gsanhuezafuentes/exif-classifier/commands:
+    interfaces:
+      GroupCmdFileOperation:
   github.com/gsanhuezafuentes/exif-classifier/exif_reader:
     interfaces:
       ExifReader:
@@ -7,6 +10,6 @@ packages:
   github.com/gsanhuezafuentes/exif-classifier/organize:
     interfaces:
       Organizer:
-  io:
+  github.com/gsanhuezafuentes/exif-classifier/logger:
     interfaces:
-      Writer:
+      Logger:

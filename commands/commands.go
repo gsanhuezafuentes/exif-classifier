@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"fmt"
@@ -17,8 +17,8 @@ type GroupCmd struct {
 }
 
 type CmdContext struct {
-	Logger        logger.Logger
-	ProgramOutput io.Writer
+	Logger logger.Logger
+	Stdout io.Writer
 }
 
 type GroupCmdContext struct {
@@ -41,14 +41,18 @@ func (r *GroupCmd) Run(ctx *GroupCmdContext) error {
 		}
 		r.Path = directory
 	}
-	fmt.Fprintf(ctx.ProgramOutput, "%+v\n", r)
+	fmt.Fprintf(ctx.Stdout, "%+v\n", r)
 
 	files, err := ctx.FileOperation.GetImageFilesPathFromDirectory(r.Path)
-	fmt.Fprintf(ctx.ProgramOutput, "%s\n", files)
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintf(ctx.Stdout, "%s\n", files)
 
 	ctx.Organizer.SetImagesPath(files)
 
-	if !(r.Date && r.Lens && r.Orientation) {
+	if !(r.Date || r.Lens || r.Orientation) {
 		r.Date = true
 	}
 
@@ -95,8 +99,8 @@ type PrintExifCmdContext struct {
 }
 
 func (r *PrintExifCmd) Run(ctx *PrintExifCmdContext) error {
-	fmt.Fprintf(ctx.ProgramOutput, "%+v\n", r)
+	fmt.Fprintf(ctx.Stdout, "%+v\n", r)
 
-	ctx.ExifPrinter.PrintExif(r.Path, ctx.ProgramOutput)
+	ctx.ExifPrinter.PrintExif(r.Path, ctx.Stdout)
 	return nil
 }

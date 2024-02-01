@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/alecthomas/kong"
+	"github.com/gsanhuezafuentes/exif-classifier/commands"
 	"github.com/gsanhuezafuentes/exif-classifier/exif_reader"
 	"github.com/gsanhuezafuentes/exif-classifier/logger"
 	"github.com/gsanhuezafuentes/exif-classifier/organize"
@@ -31,10 +32,10 @@ func setLoggerLevel(cli *CLI) error {
 }
 
 type CLI struct {
-	Debug     bool         `short:"D" help:"Enable debug mode"`
-	LogLevel  string       `short:"l" default:"info" help:"Set the logging level (debug|info|warning|error)" enum:"debug,info,warning,error"`
-	Group     GroupCmd     `cmd:"" help:"Move images based in a specific exif attribute"`
-	PrintExif PrintExifCmd `cmd:"" help:"Print exif tag of the images"`
+	Debug     bool                  `short:"D" help:"Enable debug mode"`
+	LogLevel  string                `short:"l" default:"info" help:"Set the logging level (debug|info|warning|error)" enum:"debug,info,warning,error"`
+	Group     commands.GroupCmd     `cmd:"" help:"Move images based in a specific exif attribute"`
+	PrintExif commands.PrintExifCmd `cmd:"" help:"Print exif tag of the images"`
 }
 
 func main() {
@@ -52,15 +53,15 @@ func main() {
 			"version": "0.0.1",
 		},
 		kong.Bind(
-			&GroupCmdContext{
-				CmdContext:    CmdContext{Logger: logger.GetLogger(), ProgramOutput: os.Stdout},
+			&commands.GroupCmdContext{
+				CmdContext:    commands.CmdContext{Logger: logger.GetLogger(), Stdout: os.Stdout},
 				Organizer:     organize.NewDefaultOrganizer(exif_reader.New(), os.Rename),
-				FileOperation: DefaultCmdOperation{},
+				FileOperation: commands.DefaultCmdOperation{},
 			},
-			&PrintExifCmdContext{
-				CmdContext: CmdContext{
-					Logger:        logger.GetLogger(),
-					ProgramOutput: os.Stdout,
+			&commands.PrintExifCmdContext{
+				CmdContext: commands.CmdContext{
+					Logger: logger.GetLogger(),
+					Stdout: os.Stdout,
 				},
 				ExifPrinter: exifReader,
 			},
