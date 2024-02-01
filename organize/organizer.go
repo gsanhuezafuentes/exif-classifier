@@ -2,8 +2,8 @@ package organize
 
 import (
 	"errors"
-	"fmt"
 	"github.com/gsanhuezafuentes/exif-classifier/exif_reader"
+	"os"
 	"path/filepath"
 )
 
@@ -42,41 +42,26 @@ func (r *DefaultOrganizer) SetImagesPath(files []string) {
 }
 
 func (r *DefaultOrganizer) OrganizeImgsByDate() error {
-	if err := r.checkFilesExist(); err != nil {
-		return err
-	}
-	if err := r.scanExifData(); err != nil {
-		return err
-	}
-
-	for _, image := range r.cache {
-		creationTime := image.CreatedTime
+	return r.organizeFiles(func(exif *exifDataWithPath) string {
+		creationTime := exif.CreatedTime
 		date := creationTime.Format(DATE_FORMAT)
-		newPath := filepath.Join(filepath.Dir(image.path), date, filepath.Base(image.path))
-		fmt.Printf("Move files from [%s] to [%s]\n", image.path, newPath)
-		image.path = newPath
-		fmt.Println(image.path)
-	}
-	return nil
+		return date
+	})
 }
 
 func (r *DefaultOrganizer) OrganizeImgsByLens() error {
-	if err := r.checkFilesExist(); err != nil {
-		return err
-	}
-	if err := r.scanExifData(); err != nil {
-		return err
-	}
-	for _, image := range r.cache {
-		lens := image.LensModel
-		newPath := filepath.Join(filepath.Dir(image.path), lens, filepath.Base(image.path))
-		fmt.Printf("Move files from [%s] to [%s]\n", image.path, newPath)
-		image.path = newPath
-	}
-	return nil
+	return r.organizeFiles(func(exif *exifDataWithPath) string {
+		return exif.LensModel
+	})
 }
 
 func (r *DefaultOrganizer) OrganizeImgsByOrientation() error {
+	return r.organizeFiles(func(exif *exifDataWithPath) string {
+		return exif.Orientation
+	})
+}
+
+func (r *DefaultOrganizer) organizeFiles(extractor func(exifData *exifDataWithPath) string) error {
 	if err := r.checkFilesExist(); err != nil {
 		return err
 	}
@@ -84,9 +69,14 @@ func (r *DefaultOrganizer) OrganizeImgsByOrientation() error {
 		return err
 	}
 	for _, image := range r.cache {
-		orientation := image.Orientation
-		newPath := filepath.Join(filepath.Dir(image.path), orientation, filepath.Base(image.path))
-		fmt.Printf("Move files from [%s] to [%s]\n", image.path, newPath)
+		property := extractor(image)
+		newPath := filepath.Join(filepath.Dir(image.path), property, filepath.Base(image.path))
+		if err := createFolderIfNotExist(newPath); err != nil {
+			return err
+		}
+		if err := os.Rename(image.path, newPath); err != nil {
+			return err
+		}
 		image.path = newPath
 	}
 	return nil
@@ -107,6 +97,16 @@ func (r *DefaultOrganizer) scanExifData() error {
 func (r *DefaultOrganizer) checkFilesExist() error {
 	if len(r.files) == 0 {
 		return errors.New("files has not been initialized. Use SetImagesPath to add the images to modify")
+	}
+	return nil
+}
+
+func createFolderIfNotExist(destPath string) error {
+	destDir := filepath.Dir(destPath)
+	if _, err := os.Stat(destDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(destDir, os.ModePerm); err != nil {
+			return err
+		}
 	}
 	return nil
 }

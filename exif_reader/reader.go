@@ -1,6 +1,7 @@
 package exif_reader
 
 import (
+	"errors"
 	"fmt"
 	"github.com/dsoprea/go-exif/v3"
 	exifcommon "github.com/dsoprea/go-exif/v3/common"
@@ -61,7 +62,9 @@ func (r DefaultExifReader) Read(imagePath string) (*ExifData, error) {
 	}
 
 	orientation, err := getTagValue(index.RootIfd, ORIENTATION)
-	if err != nil {
+	if errors.Is(err, exif.ErrTagNotFound) {
+		orientation = []uint16{0}
+	} else if err != nil {
 		return nil, err
 	}
 
@@ -109,6 +112,9 @@ func (r DefaultExifReader) PrintExif(imagePath string, out io.Writer) error {
 // getTagValue find in the ifd the tag by name and return the associated value.
 func getTagValue(ifd *exif.Ifd, name string) (any, error) {
 	results, err := ifd.FindTagWithName(name)
+	if err != nil {
+		return nil, err
+	}
 
 	ite := results[0]
 

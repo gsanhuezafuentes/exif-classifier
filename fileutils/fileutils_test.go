@@ -23,7 +23,6 @@ func TestGetCurrentDirectory(t *testing.T) {
 func TestGetImageFilesPathFromDirectory(t *testing.T) {
 	tempDir, err := os.MkdirTemp("", "test_get_images")
 	defer func() {
-		// Remove the temporary directory when done (comment out if you want to keep it for inspection)
 		err := os.RemoveAll(tempDir)
 		if err != nil {
 			fmt.Println("Error removing temporary directory:", err)
