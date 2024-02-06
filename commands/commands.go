@@ -33,13 +33,8 @@ type GroupCmdFileOperation interface {
 }
 
 func (r *GroupCmd) Run(ctx *GroupCmdContext) error {
-	if r.Path == "" {
-		directory, err := ctx.FileOperation.GetCurrentDirectory()
-		ctx.Logger.Debugf("Using Getwd() %s", directory)
-		if err != nil {
-			return err
-		}
-		r.Path = directory
+	if err := r.setPath(ctx); err != nil {
+		return err
 	}
 	fmt.Fprintf(ctx.Stdout, "%+v\n", r)
 
@@ -57,26 +52,35 @@ func (r *GroupCmd) Run(ctx *GroupCmdContext) error {
 	}
 
 	if r.Date {
-		err = ctx.Organizer.OrganizeImgsByDate()
-		if err != nil {
+		if err := ctx.Organizer.OrganizeImgsByDate(); err != nil {
 			return err
 		}
 	}
 
 	if r.Orientation {
-		err = ctx.Organizer.OrganizeImgsByOrientation()
-		if err != nil {
+		if err := ctx.Organizer.OrganizeImgsByOrientation(); err != nil {
 			return err
 		}
 	}
 
 	if r.Lens {
-		err = ctx.Organizer.OrganizeImgsByLens()
-		if err != nil {
+		if err := ctx.Organizer.OrganizeImgsByLens(); err != nil {
 			return err
 		}
 	}
 	return err
+}
+
+func (r *GroupCmd) setPath(ctx *GroupCmdContext) error {
+	if r.Path == "" {
+		directory, err := ctx.FileOperation.GetCurrentDirectory()
+		ctx.Logger.Debugf("Using Getwd() %s", directory)
+		if err != nil {
+			return err
+		}
+		r.Path = directory
+	}
+	return nil
 }
 
 type DefaultCmdOperation struct{}
